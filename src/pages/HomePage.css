@@ -1,0 +1,402 @@
+/* HomePage Component Styles - Modern Sporty Abstract Theme */
+.home-page {
+  min-height: 100vh;
+}
+
+/* Page header styles */
+.page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 3rem 0;
+  position: relative;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 50% 0%, rgba(160, 240, 0, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 20% 100%, rgba(0, 60, 60, 0.1) 0%, transparent 50%);
+  opacity: 0.6;
+}
+
+.page-header h1 {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  font-family: 'Arial Black', 'Impact', sans-serif;
+  position: relative;
+}
+
+.page-header p {
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  font-weight: 600;
+  position: relative;
+}
+
+/* Table container */
+.table-container {
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+/* Ranking table */
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+.ranking-table th {
+  background: linear-gradient(135deg, rgba(160, 240, 0, 0.1), rgba(0, 60, 60, 0.1));
+  color: var(--text-primary);
+  font-weight: 800;
+  padding: 1.5rem 1rem;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.ranking-table th:first-child {
+  border-radius: 20px 0 0 0;
+}
+
+.ranking-table th:last-child {
+  border-radius: 0 20px 0 0;
+}
+
+.ranking-table td {
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.ranking-row:hover {
+  background: linear-gradient(135deg, rgba(160, 240, 0, 0.05), rgba(0, 60, 60, 0.05));
+}
+
+/* Rank column */
+.rank-col, .rank-cell {
+  width: 80px;
+  text-align: center;
+}
+
+.rank-number {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+/* Medal styles */
+.medal {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.2rem;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 2px solid;
+}
+
+.medal-gold {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #000;
+  border-color: #ffd700;
+}
+
+.medal-silver {
+  background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+  color: #000;
+  border-color: #c0c0c0;
+}
+
+.medal-bronze {
+  background: linear-gradient(135deg, #cd7f32, #e89c5e);
+  color: #000;
+  border-color: #cd7f32;
+}
+
+/* Player column */
+.player-col, .player-cell {
+  min-width: 200px;
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatar {
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+}
+
+.player-name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* Stats columns */
+.matches-col, .matches-cell,
+.wins-col, .wins-cell,
+.losses-col, .losses-cell,
+.percentage-col, .percentage-cell {
+  text-align: center;
+  width: 120px;
+}
+
+.match-count {
+  font-weight: 800;
+  font-size: 1rem;
+  font-family: 'Courier New', monospace;
+}
+
+.win-count {
+  color: var(--accent-primary);
+  font-weight: 800;
+  font-size: 1rem;
+  font-family: 'Courier New', monospace;
+}
+
+.loss-count {
+  color: #ff6b6b;
+  font-weight: 800;
+  font-size: 1rem;
+  font-family: 'Courier New', monospace;
+}
+
+.win-percentage {
+  background: linear-gradient(135deg, var(--accent-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+/* Loading and empty states */
+.loading, .empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  margin: 2rem 0;
+}
+
+.loading {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.empty-state h3 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.empty-state p {
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Ranking footer */
+.ranking-footer {
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+}
+
+.stats-summary {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: 'Courier New', monospace;
+}
+
+/* Responsive Design for HomePage */
+@media (max-width: 768px) {
+  .page-header {
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+  }
+  
+  .page-header h1 {
+    font-size: 2.2rem;
+  }
+  
+  .page-header p {
+    font-size: 1rem;
+  }
+  
+  .table-container {
+    border-radius: 16px;
+    overflow-x: auto;
+  }
+  
+  .ranking-table {
+    min-width: 600px;
+  }
+  
+  .ranking-table th,
+  .ranking-table td {
+    padding: 1rem 0.75rem;
+  }
+  
+  .medal {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .avatar {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+  }
+  
+  .player-name {
+    font-size: 1rem;
+  }
+  
+  .stats-summary {
+    gap: 2rem;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+  
+  .loading, .empty-state {
+    padding: 3rem 1rem;
+  }
+  
+  .empty-state h3 {
+    font-size: 1.5rem;
+  }
+  
+  .empty-state p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 1.5rem 0;
+  }
+  
+  .page-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .ranking-table {
+    min-width: 500px;
+  }
+  
+  .ranking-table th,
+  .ranking-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .medal {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+  
+  .avatar {
+    font-size: 1.25rem;
+    width: 35px;
+    height: 35px;
+  }
+  
+  .stats-summary {
+    gap: 1.5rem;
+    flex-direction: column;
+  }
+  
+  .stat-item {
+    flex-direction: row;
+    gap: 1rem;
+  }
+  
+  .stat-label {
+    margin-bottom: 0;
+  }
+  
+  .ranking-footer {
+    padding: 1.5rem;
+  }
+  
+  .loading, .empty-state {
+    padding: 2rem 1rem;
+  }
+  
+  .empty-state h3 {
+    font-size: 1.3rem;
+  }
+}
