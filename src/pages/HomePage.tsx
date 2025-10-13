@@ -1,74 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Player, PlayerStats } from '../types';
+import { PlayerStats } from '../types';
 import { calculatePlayerStats, getMedalClass, calculateWinPercentage } from '../utils';
+import { playerService, matchService, convertFromDynamoDBFormat } from '../services/dynamodb';
 import './HomePage.css';
-
-// Mock data for initial development
-const mockPlayers: Player[] = [
-  {
-    id: '1',
-    name: 'Alex Chen',
-    avatar: 'https://api.dicebear.com/6.x/adventurer/svg?seed=alex-chen&backgroundColor=b6e3f4',
-    matches: 15,
-    wins: 12,
-    losses: 3,
-    createdAt: new Date('2024-01-15')
-  },
-  {
-    id: '2',
-    name: 'Sarah Johnson',
-    avatar: 'https://api.dicebear.com/6.x/avataaars/svg?seed=sarah-johnson&backgroundColor=c0aede',
-    matches: 18,
-    wins: 15,
-    losses: 3,
-    createdAt: new Date('2024-01-20')
-  },
-  {
-    id: '3',
-    name: 'Mike Rodriguez',
-    avatar: 'https://api.dicebear.com/6.x/lorelei/svg?seed=mike-rodriguez&backgroundColor=d1d4f9',
-    matches: 12,
-    wins: 8,
-    losses: 4,
-    createdAt: new Date('2024-02-01')
-  },
-  {
-    id: '4',
-    name: 'Emma Wilson',
-    avatar: 'https://api.dicebear.com/6.x/micah/svg?seed=emma-wilson&backgroundColor=ffd5dc',
-    matches: 10,
-    wins: 6,
-    losses: 4,
-    createdAt: new Date('2024-02-10')
-  },
-  {
-    id: '5',
-    name: 'David Kim',
-    avatar: 'https://api.dicebear.com/6.x/pixel-art/svg?seed=david-kim&backgroundColor=ffdfbf',
-    matches: 8,
-    wins: 3,
-    losses: 5,
-    createdAt: new Date('2024-02-15')
-  }
-];
-
-const mockMatches: any[] = []; // Empty for now, we'll use player stats directly
 
 // Homepage component showing player rankings
 const HomePage: React.FC = () => {
   const [playerStats, setPlayerStats] = useState<PlayerStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load player stats on component mount
+  // Load player stats on component mount from DynamoDB
   useEffect(() => {
-    const loadPlayerStats = () => {
+    const loadPlayerStats = async () => {
       setIsLoading(true);
-      // Simulate API call delay
-      setTimeout(() => {
-        const stats = calculatePlayerStats(mockPlayers, mockMatches);
+      try {
+        // Fetch players and matches from DynamoDB
+        const players = await playerService.getAllPlayers();
+        const matches = await matchService.getAllMatches();
+        
+        // Convert from DynamoDB format
+        const convertedPlayers = players.map(convertFromDynamoDBFormat);
+        const convertedMatches = matches.map(convertFromDynamoDBFormat);
+        
+        // Calculate player stats
+        const stats = calculatePlayerStats(convertedPlayers, convertedMatches);
         setPlayerStats(stats);
+      } catch (error) {
+        console.error('Error loading player stats:', error);
+        // Set empty stats on error
+        setPlayerStats([]);
+      } finally {
         setIsLoading(false);
-      }, 500);
+      }
     };
 
     loadPlayerStats();

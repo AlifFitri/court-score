@@ -1,4 +1,67 @@
-# Getting Started with Create React App
+# Court Score - Badminton League Management
+
+A React TypeScript application for managing badminton league players, matches, and rankings with AWS DynamoDB integration.
+
+## Features
+
+- **Player Management**: Create, edit, delete players with avatar support
+- **Match Management**: Record matches with team assignments and scores
+- **Player Rankings**: Automatic ranking based on win percentage
+- **DynamoDB Integration**: All data persisted in AWS DynamoDB
+- **Responsive Design**: Works on desktop and mobile devices
+
+## AWS DynamoDB Setup
+
+### Important: DynamoDB Tables Must Be Created First
+
+**No, DynamoDB tables are NOT automatically created** when users add players/matches. You must create the tables manually before using the application.
+
+### How DynamoDB Columns Work
+
+**DynamoDB is schema-less** - columns (attributes) are automatically created when you add data. You only need to define:
+- **Table names** (we use `court-score-players` and `court-score-matches`)
+- **Primary key** (we use `id` as the partition key)
+
+All other columns (name, avatar, matches, wins, losses, date, team1, team2, etc.) are automatically created when you save data. No need to predefine them!
+
+### Step-by-Step Setup
+
+1. **Update Environment Variables**
+   - Copy `.env` and update with your AWS credentials:
+   ```bash
+   # AWS DynamoDB Configuration
+   REACT_APP_AWS_ACCESS_KEY_ID=your_actual_access_key_here
+   REACT_APP_AWS_SECRET_ACCESS_KEY=your_actual_secret_key_here
+   REACT_APP_AWS_REGION=ap-southeast-1
+   REACT_APP_DYNAMODB_PLAYERS_TABLE=court-score-players
+   REACT_APP_DYNAMODB_MATCHES_TABLE=court-score-matches
+   ```
+
+2. **Create DynamoDB Tables**
+   ```bash
+   # Run the table creation script
+   node create-dynamodb-tables.js
+   ```
+
+3. **Verify IAM Permissions**
+   Ensure your AWS IAM user has these DynamoDB permissions:
+   - `dynamodb:CreateTable`
+   - `dynamodb:PutItem`
+   - `dynamodb:GetItem`
+   - `dynamodb:UpdateItem`
+   - `dynamodb:DeleteItem`
+   - `dynamodb:Scan`
+   - `dynamodb:Query`
+
+### Troubleshooting
+
+If you see errors like "Table not found" or "Access denied":
+- Verify your AWS credentials in `.env`
+- Run the table creation script again
+- Check IAM permissions in AWS Console
+- Ensure the AWS region matches your DynamoDB tables
+
+## Available Scripts
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 

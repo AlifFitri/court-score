@@ -1,49 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Player, CreatePlayerData, ModalState } from '../types';
 import { generateId } from '../utils';
 import PlayerModal from '../components/players/PlayerModal';
+import { playerService, convertToDynamoDBFormat, convertFromDynamoDBFormat } from '../services/dynamodb';
 import './PlayerPage.css';
-
-// Mock data for initial development
-const initialPlayers: Player[] = [
-  {
-    id: '1',
-    name: 'Alex Chen',
-    avatar: '👨',
-    matches: 15,
-    wins: 12,
-    losses: 3,
-    createdAt: new Date('2024-01-15')
-  },
-  {
-    id: '2',
-    name: 'Sarah Johnson',
-    avatar: '👩',
-    matches: 18,
-    wins: 15,
-    losses: 3,
-    createdAt: new Date('2024-01-20')
-  },
-  {
-    id: '3',
-    name: 'Mike Rodriguez',
-    avatar: '👨‍🦱',
-    matches: 12,
-    wins: 8,
-    losses: 4,
-    createdAt: new Date('2024-02-01')
-  }
-];
 
 // Player page component for managing players
 const PlayerPage: React.FC = () => {
-  const [players, setPlayers] = useState<Player[]>(initialPlayers);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [modalState, setModalState] = useState<ModalState>({
     isOpen: false,
     type: 'create'
   });
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load players from DynamoDB on component mount
+  useEffect(() => {
+    const loadPlayers = async () => {
+      setIsLoading(true);
+      try {
+        const playersData = await playerService.getAllPlayers();
+        const convertedPlayers = playersData.map(convertFromDynamoDBFormat);
+        setPlayers(convertedPlayers);
+      } catch (error) {
+        console.error('Error loading players:', error);
+        // Set empty players on error
+        setPlayers([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPlayers();
+  }, []);
 
   // Filter players based on search term
   const filteredPlayers = players.filter(player =>
@@ -63,34 +54,61 @@ const PlayerPage: React.FC = () => {
   };
 
   // Handle delete player
-  const handleDeletePlayer = (playerId: string) => {
+  const handleDeletePlayer = async (playerId: string) => {
     if (window.confirm('Are you sure you want to delete this player?')) {
-      setPlayers(players.filter(player => player.id !== playerId));
+      try {
+        await playerService.deletePlayer(playerId);
+        setPlayers(players.filter(player => player.id !== playerId));
+      } catch (error) {
+        console.error('Error deleting player:', error);
+        alert('Failed to delete player. Please try again.');
+      }
     }
   };
 
   // Handle save player (create or update)
-  const handleSavePlayer = (playerData: CreatePlayerData) => {
-    if (modalState.type === 'create') {
-      // Create new player
-      const newPlayer: Player = {
-        id: generateId(),
-        ...playerData,
-        matches: 0,
-        wins: 0,
-        losses: 0,
-        createdAt: new Date()
-      };
-      setPlayers([...players, newPlayer]);
-    } else if (modalState.type === 'edit' && selectedPlayer) {
-      // Update existing player
-      setPlayers(players.map(player =>
-        player.id === selectedPlayer.id
-          ? { ...player, ...playerData }
-          : player
-      ));
+  const handleSavePlayer = async (playerData: CreatePlayerData) => {
+    try {
+      if (modalState.type === 'create') {
+        // Create new player
+        const newPlayer: Player = {
+          id: generateId(),
+          ...playerData,
+          matches: 0,
+          wins: 0,
+          losses: 0,
+          createdAt: new Date()
+        };
+        
+        // Save to DynamoDB
+        const playerForDB = convertToDynamoDBFormat(newPlayer);
+        await playerService.createPlayer(playerForDB);
+        
+        // Update local state
+        setPlayers([...players, newPlayer]);
+      } else if (modalState.type === 'edit' && selectedPlayer) {
+        // Update existing player
+        const updatedPlayer = { 
+          ...selectedPlayer, 
+          ...playerData 
+        };
+        
+        // Save to DynamoDB
+        const playerForDB = convertToDynamoDBFormat(updatedPlayer);
+        await playerService.updatePlayer(selectedPlayer.id, playerForDB);
+        
+        // Update local state
+        setPlayers(players.map(player =>
+          player.id === selectedPlayer.id
+            ? updatedPlayer
+            : player
+        ));
+      }
+      setModalState({ ...modalState, isOpen: false });
+    } catch (error) {
+      console.error('Error saving player:', error);
+      alert('Failed to save player. Please try again.');
     }
-    setModalState({ ...modalState, isOpen: false });
   };
 
   // Close modal
@@ -136,7 +154,9 @@ const PlayerPage: React.FC = () => {
         </div>
       </div>
 
-      {filteredPlayers.length === 0 ? (
+      {isLoading ? (
+        <div className="loading">Loading players...</div>
+      ) : filteredPlayers.length === 0 ? (
         <div className="empty-state">
           <h3>No Players Found</h3>
           <p>
@@ -162,7 +182,15 @@ const PlayerPage: React.FC = () => {
               <div key={player.id} className="player-card">
                 <div className="player-header">
                   <div className="player-avatar-large">
-                    {player.avatar}
+                    <img 
+                      src={player.avatar} 
+                      alt={`${player.name} avatar`}
+                      className="avatar-image"
+                      onError={(e) => {
+                        // Fallback to a placeholder if image fails to load
+                        e.currentTarget.src = `https://api.dicebear.com/6.x/identicon/svg?seed=${player.id}&backgroundColor=b6e3f4`;
+                      }}
+                    />
                   </div>
                   <div className="player-info">
                     <h3 className="player-name">{player.name}</h3>

@@ -153,7 +153,7 @@ export const generateAvatarOptions = (count: number = 24): string[] => {
 };
 
 // Default avatars for players (using DiceBear generated images)
-export const defaultAvatars = generateAvatarOptions(100);
+export const defaultAvatars = generateAvatarOptions(150);
 
 // Get random avatar
 export const getRandomAvatar = (): string => {

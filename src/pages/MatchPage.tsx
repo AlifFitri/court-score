@@ -1,87 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Match, Player, ModalState } from '../types';
 import { generateId, formatDate, determineMatchWinner } from '../utils';
 import MatchModal from '../components/matches/MatchModal';
+import { matchService, playerService, convertToDynamoDBFormat, convertFromDynamoDBFormat } from '../services/dynamodb';
 import './MatchPage.css';
-
-// Mock data for initial development
-const mockPlayers: Player[] = [
-  {
-    id: '1',
-    name: 'Alex Chen',
-    avatar: '👨',
-    matches: 15,
-    wins: 12,
-    losses: 3,
-    createdAt: new Date('2024-01-15')
-  },
-  {
-    id: '2',
-    name: 'Sarah Johnson',
-    avatar: '👩',
-    matches: 18,
-    wins: 15,
-    losses: 3,
-    createdAt: new Date('2024-01-20')
-  },
-  {
-    id: '3',
-    name: 'Mike Rodriguez',
-    avatar: '👨‍🦱',
-    matches: 12,
-    wins: 8,
-    losses: 4,
-    createdAt: new Date('2024-02-01')
-  },
-  {
-    id: '4',
-    name: 'Emma Wilson',
-    avatar: '👩‍🦰',
-    matches: 10,
-    wins: 6,
-    losses: 4,
-    createdAt: new Date('2024-02-10')
-  }
-];
-
-const initialMatches: Match[] = [
-  {
-    id: '1',
-    date: new Date('2024-03-01T14:00:00'),
-    team1: {
-      players: [mockPlayers[0], mockPlayers[1]],
-      score: 21
-    },
-    team2: {
-      players: [mockPlayers[2], mockPlayers[3]],
-      score: 18
-    },
-    createdAt: new Date('2024-03-01')
-  },
-  {
-    id: '2',
-    date: new Date('2024-03-02T16:30:00'),
-    team1: {
-      players: [mockPlayers[0]],
-      score: 21
-    },
-    team2: {
-      players: [mockPlayers[2]],
-      score: 19
-    },
-    createdAt: new Date('2024-03-02')
-  }
-];
 
 // Match page component for managing matches
 const MatchPage: React.FC = () => {
-  const [matches, setMatches] = useState<Match[]>(initialMatches);
-  const [players] = useState<Player[]>(mockPlayers);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [modalState, setModalState] = useState<ModalState>({
     isOpen: false,
     type: 'create'
   });
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load matches and players from DynamoDB on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        // Load players and matches from DynamoDB
+        const [playersData, matchesData] = await Promise.all([
+          playerService.getAllPlayers(),
+          matchService.getAllMatches()
+        ]);
+        
+        // Convert from DynamoDB format
+        const convertedPlayers = playersData.map(convertFromDynamoDBFormat);
+        const convertedMatches = matchesData.map(convertFromDynamoDBFormat);
+        
+        setPlayers(convertedPlayers);
+        setMatches(convertedMatches);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        // Set empty data on error
+        setPlayers([]);
+        setMatches([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   // Open create match modal
   const handleCreateMatch = () => {
@@ -96,50 +59,74 @@ const MatchPage: React.FC = () => {
   };
 
   // Handle delete match
-  const handleDeleteMatch = (matchId: string) => {
+  const handleDeleteMatch = async (matchId: string) => {
     if (window.confirm('Are you sure you want to delete this match?')) {
-      setMatches(matches.filter(match => match.id !== matchId));
+      try {
+        await matchService.deleteMatch(matchId);
+        setMatches(matches.filter(match => match.id !== matchId));
+      } catch (error) {
+        console.error('Error deleting match:', error);
+        alert('Failed to delete match. Please try again.');
+      }
     }
   };
 
   // Handle save match (create or update)
-  const handleSaveMatch = (matchData: any) => {
-    if (modalState.type === 'create') {
-      // Create new match
-      const newMatch: Match = {
-        id: generateId(),
-        date: matchData.date,
-        team1: {
-          players: matchData.team1Players,
-          score: matchData.team1Score
-        },
-        team2: {
-          players: matchData.team2Players,
-          score: matchData.team2Score
-        },
-        createdAt: new Date()
-      };
-      setMatches([...matches, newMatch]);
-    } else if (modalState.type === 'edit' && selectedMatch) {
-      // Update existing match
-      setMatches(matches.map(match =>
-        match.id === selectedMatch.id
-          ? {
-              ...match,
-              date: matchData.date,
-              team1: {
-                players: matchData.team1Players,
-                score: matchData.team1Score
-              },
-              team2: {
-                players: matchData.team2Players,
-                score: matchData.team2Score
-              }
-            }
-          : match
-      ));
+  const handleSaveMatch = async (matchData: any) => {
+    try {
+      if (modalState.type === 'create') {
+        // Create new match
+        const newMatch: Match = {
+          id: generateId(),
+          date: matchData.date,
+          team1: {
+            players: matchData.team1Players,
+            score: matchData.team1Score
+          },
+          team2: {
+            players: matchData.team2Players,
+            score: matchData.team2Score
+          },
+          createdAt: new Date()
+        };
+        
+        // Save to DynamoDB
+        const matchForDB = convertToDynamoDBFormat(newMatch);
+        await matchService.createMatch(matchForDB);
+        
+        // Update local state
+        setMatches([...matches, newMatch]);
+      } else if (modalState.type === 'edit' && selectedMatch) {
+        // Update existing match
+        const updatedMatch = {
+          ...selectedMatch,
+          date: matchData.date,
+          team1: {
+            players: matchData.team1Players,
+            score: matchData.team1Score
+          },
+          team2: {
+            players: matchData.team2Players,
+            score: matchData.team2Score
+          }
+        };
+        
+        // Save to DynamoDB
+        const matchForDB = convertToDynamoDBFormat(updatedMatch);
+        await matchService.updateMatch(selectedMatch.id, matchForDB);
+        
+        // Update local state
+        setMatches(matches.map(match =>
+          match.id === selectedMatch.id
+            ? updatedMatch
+            : match
+        ));
+      }
+      setModalState({ ...modalState, isOpen: false });
+    } catch (error) {
+      console.error('Error saving match:', error);
+      alert('Failed to save match. Please try again.');
     }
-    setModalState({ ...modalState, isOpen: false });
   };
 
   // Close modal
@@ -180,7 +167,9 @@ const MatchPage: React.FC = () => {
         </button>
       </div>
 
-      {matches.length === 0 ? (
+      {isLoading ? (
+        <div className="loading">Loading matches...</div>
+      ) : matches.length === 0 ? (
         <div className="empty-state">
           <h3>No Matches Yet</h3>
           <p>Create your first match to get started</p>

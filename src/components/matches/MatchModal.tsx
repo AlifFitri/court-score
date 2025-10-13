@@ -172,7 +172,17 @@ const MatchModal: React.FC<MatchModalProps> = ({
               <div className="team-players">
                 {team1Players.map(player => (
                   <div key={player.id} className="selected-player">
-                    <span className="player-avatar">{player.avatar}</span>
+                    <span className="player-avatar">
+                      <img 
+                        src={player.avatar} 
+                        alt={`${player.name} avatar`}
+                        className="avatar-image"
+                        onError={(e) => {
+                          // Fallback to a placeholder if image fails to load
+                          e.currentTarget.src = `https://api.dicebear.com/6.x/identicon/svg?seed=${player.id}&backgroundColor=b6e3f4`;
+                        }}
+                      />
+                    </span>
                     <span className="player-name">{player.name}</span>
                     <button
                       type="button"
@@ -196,7 +206,7 @@ const MatchModal: React.FC<MatchModalProps> = ({
                     <option value="">Add player...</option>
                     {availablePlayers.map(player => (
                       <option key={player.id} value={player.id}>
-                        {player.avatar} {player.name}
+                        {player.name}
                       </option>
                     ))}
                   </select>
@@ -216,7 +226,17 @@ const MatchModal: React.FC<MatchModalProps> = ({
               <div className="team-players">
                 {team2Players.map(player => (
                   <div key={player.id} className="selected-player">
-                    <span className="player-avatar">{player.avatar}</span>
+                    <span className="player-avatar">
+                      <img 
+                        src={player.avatar} 
+                        alt={`${player.name} avatar`}
+                        className="avatar-image"
+                        onError={(e) => {
+                          // Fallback to a placeholder if image fails to load
+                          e.currentTarget.src = `https://api.dicebear.com/6.x/identicon/svg?seed=${player.id}&backgroundColor=b6e3f4`;
+                        }}
+                      />
+                    </span>
                     <span className="player-name">{player.name}</span>
                     <button
                       type="button"
@@ -240,7 +260,7 @@ const MatchModal: React.FC<MatchModalProps> = ({
                     <option value="">Add player...</option>
                     {availablePlayers.map(player => (
                       <option key={player.id} value={player.id}>
-                        {player.avatar} {player.name}
+                        {player.name}
                       </option>
                     ))}
                   </select>
