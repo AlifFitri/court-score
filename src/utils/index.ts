@@ -98,13 +98,62 @@ export const getMedalClass = (rank: number): string => {
   }
 };
 
-// Default avatars for players
-export const defaultAvatars = [
-  '👨', '👩', '👦', '👧', '🧑', '👨‍🦰', '👩‍🦰', '👨‍🦱', '👩‍🦱',
-  '👨‍🦳', '👩‍🦳', '👨‍🦲', '👩‍🦲', '🧔', '🧔‍♀️', '👱', '👱‍♀️',
-  '🧑‍🎤', '👨‍🎤', '👩‍🎤', '🧑‍🚀', '👨‍🚀', '👩‍🚀', '🧑‍⚕️', '👨‍⚕️',
-  '👩‍⚕️', '🧑‍🔬', '👨‍🔬', '👩‍🔬', '🧑‍💻', '👨‍💻', '👩‍💻', '🧑‍🏫'
+// Avatar styles from DiceBear collection
+export const avatarStyles = [
+  'adventurer',
+  'adventurer-neutral',
+  'avataaars',
+  'avataaars-neutral',
+  'big-ears',
+  'big-ears-neutral',
+  'big-smile',
+  'bottts',
+  'bottts-neutral',
+  'croodles',
+  'croodles-neutral',
+  'fun-emoji',
+  'icons',
+  'identicon',
+  'initials',
+  'lorelei',
+  'lorelei-neutral',
+  'micah',
+  'miniavs',
+  'notionists',
+  'notionists-neutral',
+  'open-peeps',
+  'personas',
+  'pixel-art',
+  'pixel-art-neutral'
 ];
+
+// Generate avatar URL using DiceBear API
+export const generateAvatarUrl = (seed: string, style: string = 'adventurer'): string => {
+  return `https://api.dicebear.com/6.x/${style}/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
+};
+
+// Generate multiple avatar options for selection
+export const generateAvatarOptions = (count: number = 24): string[] => {
+  const options: string[] = [];
+  const baseSeeds = [
+    'alex', 'bailey', 'casey', 'dakota', 'emerson', 'finley', 'grayson', 'harlow',
+    'indigo', 'jordan', 'kendall', 'logan', 'morgan', 'noah', 'peyton', 'quinn',
+    'riley', 'sawyer', 'taylor', 'uriel', 'valentina', 'winston', 'xander', 'zephyr'
+  ];
+  
+  const styles = ['adventurer', 'avataaars', 'lorelei', 'micah', 'pixel-art', 'notionists'];
+  
+  for (let i = 0; i < count; i++) {
+    const style = avatarStyles[i % avatarStyles.length];
+    const seed = baseSeeds[i % baseSeeds.length] + '-' + i;
+    options.push(generateAvatarUrl(seed, style));
+  }
+  
+  return options;
+};
+
+// Default avatars for players (using DiceBear generated images)
+export const defaultAvatars = generateAvatarOptions(100);
 
 // Get random avatar
 export const getRandomAvatar = (): string => {

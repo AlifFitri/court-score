@@ -116,7 +116,15 @@ const PlayerModal: React.FC<PlayerModalProps> = ({
                   className={`avatar-option ${selectedAvatar === avatar ? 'selected' : ''}`}
                   onClick={() => handleAvatarSelect(avatar)}
                 >
-                  {avatar}
+                  <img 
+                    src={avatar} 
+                    alt={`Avatar ${index + 1}`} 
+                    className="avatar-image"
+                    onError={(e) => {
+                      // Fallback to a placeholder if image fails to load
+                      e.currentTarget.src = `https://api.dicebear.com/6.x/identicon/svg?seed=${index}&backgroundColor=b6e3f4`;
+                    }}
+                  />
                 </div>
               ))}
             </div>

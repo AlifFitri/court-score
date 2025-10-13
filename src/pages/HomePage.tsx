@@ -8,7 +8,7 @@ const mockPlayers: Player[] = [
   {
     id: '1',
     name: 'Alex Chen',
-    avatar: '👨',
+    avatar: 'https://api.dicebear.com/6.x/adventurer/svg?seed=alex-chen&backgroundColor=b6e3f4',
     matches: 15,
     wins: 12,
     losses: 3,
@@ -17,7 +17,7 @@ const mockPlayers: Player[] = [
   {
     id: '2',
     name: 'Sarah Johnson',
-    avatar: '👩',
+    avatar: 'https://api.dicebear.com/6.x/avataaars/svg?seed=sarah-johnson&backgroundColor=c0aede',
     matches: 18,
     wins: 15,
     losses: 3,
@@ -26,7 +26,7 @@ const mockPlayers: Player[] = [
   {
     id: '3',
     name: 'Mike Rodriguez',
-    avatar: '👨‍🦱',
+    avatar: 'https://api.dicebear.com/6.x/lorelei/svg?seed=mike-rodriguez&backgroundColor=d1d4f9',
     matches: 12,
     wins: 8,
     losses: 4,
@@ -35,7 +35,7 @@ const mockPlayers: Player[] = [
   {
     id: '4',
     name: 'Emma Wilson',
-    avatar: '👩‍🦰',
+    avatar: 'https://api.dicebear.com/6.x/micah/svg?seed=emma-wilson&backgroundColor=ffd5dc',
     matches: 10,
     wins: 6,
     losses: 4,
@@ -44,7 +44,7 @@ const mockPlayers: Player[] = [
   {
     id: '5',
     name: 'David Kim',
-    avatar: '👨‍💻',
+    avatar: 'https://api.dicebear.com/6.x/pixel-art/svg?seed=david-kim&backgroundColor=ffdfbf',
     matches: 8,
     wins: 3,
     losses: 5,
@@ -143,7 +143,15 @@ const HomePage: React.FC = () => {
                 </td>
                 <td className="player-cell">
                   <div className="player-info">
-                    <span className="avatar">{stats.player.avatar}</span>
+                    <img 
+                      src={stats.player.avatar} 
+                      alt={`${stats.player.name} avatar`}
+                      className="avatar"
+                      onError={(e) => {
+                        // Fallback to a placeholder if image fails to load
+                        e.currentTarget.src = `https://api.dicebear.com/6.x/identicon/svg?seed=${stats.player.id}&backgroundColor=b6e3f4`;
+                      }}
+                    />
                     <span className="player-name">{stats.player.name}</span>
                   </div>
                 </td>
