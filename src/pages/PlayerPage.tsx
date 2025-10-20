@@ -130,7 +130,7 @@ const PlayerPage: React.FC = () => {
 
   return (
     <div className="player-page">
-      <div className="page-header">
+      <div className="player-page-header">
         <h1>Players</h1>
         <p>Manage players and their profiles</p>
       </div>
@@ -157,7 +157,7 @@ const PlayerPage: React.FC = () => {
       {isLoading ? (
         <div className="loading">Loading players...</div>
       ) : filteredPlayers.length === 0 ? (
-        <div className="empty-state">
+        <div className="player-empty-state">
           <h3>No Players Found</h3>
           <p>
             {searchTerm 
@@ -180,8 +180,8 @@ const PlayerPage: React.FC = () => {
             const stats = getPlayerStats(player);
             return (
               <div key={player.id} className="player-card">
-                <div className="player-header">
-                  <div className="player-avatar-large">
+                <div className="player-card-header">
+                  <div className="player-card-avatar">
                     <img 
                       src={player.avatar} 
                       alt={`${player.name} avatar`}
@@ -192,8 +192,8 @@ const PlayerPage: React.FC = () => {
                       }}
                     />
                   </div>
-                  <div className="player-info">
-                    <h3 className="player-name">{player.name}</h3>
+                  <div className="player-card-info">
+                    <h3 className="player-card-name">{player.name}</h3>
                     <p className="player-joined">
                       Joined {player.createdAt.toLocaleDateString()}
                     </p>
@@ -219,7 +219,7 @@ const PlayerPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="player-actions">
+                <div className="player-card-actions">
                   <button
                     className="btn btn-outline btn-small"
                     onClick={() => handleEditPlayer(player)}

@@ -153,7 +153,7 @@ const MatchPage: React.FC = () => {
 
   return (
     <div className="match-page">
-      <div className="page-header">
+      <div className="match-page-header">
         <h1>Matches</h1>
         <p>Manage and track badminton matches</p>
       </div>
@@ -170,7 +170,7 @@ const MatchPage: React.FC = () => {
       {isLoading ? (
         <div className="loading">Loading matches...</div>
       ) : matches.length === 0 ? (
-        <div className="empty-state">
+        <div className="match-empty-state">
           <h3>No Matches Yet</h3>
           <p>Create your first match to get started</p>
           <button
@@ -190,7 +190,7 @@ const MatchPage: React.FC = () => {
                   <div className="match-date">
                     {formatDate(match.date)}
                   </div>
-                  <div className="match-actions">
+                  <div className="match-card-actions">
                     <button
                       className="btn btn-outline btn-small"
                       onClick={() => handleEditMatch(match)}
@@ -211,8 +211,18 @@ const MatchPage: React.FC = () => {
                     <div className="team-players">
                       {match.team1.players.map((player, index) => (
                         <div key={player.id} className="player-badge">
-                          <span className="player-avatar">{player.avatar}</span>
-                          <span className="player-name">{player.name}</span>
+                          <span className="match-player-avatar">
+                            <img 
+                              src={player.avatar} 
+                              alt={`${player.name} avatar`}
+                              className="avatar-image"
+                              onError={(e) => {
+                                // Fallback to a placeholder if image fails to load
+                                e.currentTarget.src = `https://api.dicebear.com/6.x/identicon/svg?seed=${player.id}&backgroundColor=b6e3f4`;
+                              }}
+                            />
+                          </span>
+                          <span className="match-player-name">{player.name}</span>
                         </div>
                       ))}
                     </div>
@@ -227,8 +237,18 @@ const MatchPage: React.FC = () => {
                     <div className="team-players">
                       {match.team2.players.map((player, index) => (
                         <div key={player.id} className="player-badge">
-                          <span className="player-avatar">{player.avatar}</span>
-                          <span className="player-name">{player.name}</span>
+                          <span className="match-player-avatar">
+                            <img 
+                              src={player.avatar} 
+                              alt={`${player.name} avatar`}
+                              className="avatar-image"
+                              onError={(e) => {
+                                // Fallback to a placeholder if image fails to load
+                                e.currentTarget.src = `https://api.dicebear.com/6.x/identicon/svg?seed=${player.id}&backgroundColor=b6e3f4`;
+                              }}
+                            />
+                          </span>
+                          <span className="match-player-name">{player.name}</span>
                         </div>
                       ))}
                     </div>

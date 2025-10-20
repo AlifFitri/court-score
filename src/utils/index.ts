@@ -141,8 +141,6 @@ export const generateAvatarOptions = (count: number = 24): string[] => {
     'riley', 'sawyer', 'taylor', 'uriel', 'valentina', 'winston', 'xander', 'zephyr'
   ];
   
-  const styles = ['adventurer', 'avataaars', 'lorelei', 'micah', 'pixel-art', 'notionists'];
-  
   for (let i = 0; i < count; i++) {
     const style = avatarStyles[i % avatarStyles.length];
     const seed = baseSeeds[i % baseSeeds.length] + '-' + i;

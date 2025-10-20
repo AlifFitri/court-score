@@ -18,8 +18,11 @@ const Header: React.FC = () => {
       <div className="header-content">
         <div className="header-brand">
           <Link to="/" className="brand-link">
-            <span className="brand-icon">🏸</span>
-            <span className="brand-text">CourtScore</span>
+            {/* <span className="brand-icon">🏸</span> */}
+            {/* Desktop/tablet logo - narrow version */}
+            <img src="/images/CourtScore-narrow2.jpg" alt="CourtScore Logo" className="brand-logo brand-logo-desktop" />
+            {/* Mobile logo - smaller square version */}
+            <img src="/images/CourtScore.jpg" alt="CourtScore Logo" className="brand-logo brand-logo-mobile" />
           </Link>
         </div>
         

@@ -54,7 +54,7 @@ const HomePage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="home-page">
-        <div className="page-header">
+        <div className="home-page-header">
           <h1>Player Rankings</h1>
           <p>Current standings based on win percentage</p>
         </div>
@@ -67,11 +67,11 @@ const HomePage: React.FC = () => {
   if (playerStats.length === 0) {
     return (
       <div className="home-page">
-        <div className="page-header">
+        <div className="home-page-header">
           <h1>Player Rankings</h1>
           <p>Current standings based on win percentage</p>
         </div>
-        <div className="empty-state">
+        <div className="home-empty-state">
           <h3>No Players Yet</h3>
           <p>Add some players and matches to see rankings</p>
         </div>
@@ -81,7 +81,7 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="home-page">
-      <div className="page-header">
+      <div className="home-page-header">
         <h1>Player Rankings</h1>
         <p>Current standings based on win percentage</p>
       </div>
@@ -92,10 +92,22 @@ const HomePage: React.FC = () => {
             <tr>
               <th className="rank-col">Rank</th>
               <th className="player-col">Player</th>
-              <th className="matches-col">Matches</th>
-              <th className="wins-col">Wins</th>
-              <th className="losses-col">Losses</th>
-              <th className="percentage-col">Win %</th>
+              <th className="matches-col">
+                <span className="col-full">Matches</span>
+                <span className="col-short">M</span>
+              </th>
+              <th className="wins-col">
+                <span className="col-full">Wins</span>
+                <span className="col-short">W</span>
+              </th>
+              <th className="losses-col">
+                <span className="col-full">Losses</span>
+                <span className="col-short">L</span>
+              </th>
+              <th className="percentage-col">
+                <span className="col-full">Win %</span>
+                <span className="col-short">%</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -105,17 +117,17 @@ const HomePage: React.FC = () => {
                   {renderRank(stats.rank)}
                 </td>
                 <td className="player-cell">
-                  <div className="player-info">
+                  <div className="home-player-info">
                     <img 
                       src={stats.player.avatar} 
                       alt={`${stats.player.name} avatar`}
-                      className="avatar"
+                      className="home-avatar"
                       onError={(e) => {
                         // Fallback to a placeholder if image fails to load
                         e.currentTarget.src = `https://api.dicebear.com/6.x/identicon/svg?seed=${stats.player.id}&backgroundColor=b6e3f4`;
                       }}
                     />
-                    <span className="player-name">{stats.player.name}</span>
+                    <span className="home-player-name">{stats.player.name}</span>
                   </div>
                 </td>
                 <td className="matches-cell">

@@ -3,6 +3,7 @@
   max-width: 600px;
   max-height: 80vh;
   overflow-y: auto;
+  padding: 1rem;
 }
 
 .player-form {
@@ -115,10 +116,9 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .player-modal {
     margin: 0.5rem;
-    padding: 1rem;
   }
   
   .avatar-grid {
@@ -132,6 +132,12 @@
     width: 45px;
     height: 45px;
     font-size: 1.25rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
   }
 }
 
