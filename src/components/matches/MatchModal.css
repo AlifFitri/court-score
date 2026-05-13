@@ -348,6 +348,49 @@
   }
 }
 
+.match-points-preview {
+  padding: 1rem 1.25rem;
+  background: rgba(46, 196, 182, 0.08);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.match-points-preview-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.match-points-preview-helper {
+  margin: 0;
+  font-size: 0.82rem;
+  opacity: 0.85;
+  line-height: 1.35;
+}
+
+.match-points-team-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+  margin-bottom: 0.25rem;
+}
+
+.match-points-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+}
+
+.match-points-preview-incomplete {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--accent-orange, #c77d00);
+}
+
 /* Scrollbar styling */
 .match-modal::-webkit-scrollbar {
   width: 6px;

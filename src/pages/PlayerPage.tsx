@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Player, CreatePlayerData, ModalState } from '../types';
 import { generateId } from '../utils';
+import { playersWithRankingFromMatches, leaderboardCumulativePoints, formatLeaderboardPoints } from '../utils/ranking';
 import PlayerModal from '../components/players/PlayerModal';
-import { playerService, convertToDynamoDBFormat, convertFromDynamoDBFormat } from '../services/dynamodb';
+import { playerService, matchService, convertToDynamoDBFormat, convertFromDynamoDBFormat } from '../services/dynamodb';
 import './PlayerPage.css';
 
 // Player page component for managing players
@@ -16,25 +17,27 @@ const PlayerPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load players from DynamoDB on component mount
-  useEffect(() => {
-    const loadPlayers = async () => {
-      setIsLoading(true);
-      try {
-        const playersData = await playerService.getAllPlayers();
-        const convertedPlayers = playersData.map(convertFromDynamoDBFormat);
-        setPlayers(convertedPlayers);
-      } catch (error) {
-        console.error('Error loading players:', error);
-        // Set empty players on error
-        setPlayers([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadPlayers();
+  const loadPlayers = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true);
+    try {
+      const [playersData, matchesData] = await Promise.all([
+        playerService.getAllPlayers(),
+        matchService.getAllMatches()
+      ]);
+      const convertedPlayers = playersData.map(convertFromDynamoDBFormat);
+      const convertedMatches = matchesData.map(convertFromDynamoDBFormat);
+      setPlayers(playersWithRankingFromMatches(convertedPlayers, convertedMatches));
+    } catch (error) {
+      console.error('Error loading players:', error);
+      setPlayers([]);
+    } finally {
+      if (!silent) setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadPlayers(false);
+  }, [loadPlayers]);
 
   // Filter players based on search term
   const filteredPlayers = players.filter(player =>
@@ -77,15 +80,16 @@ const PlayerPage: React.FC = () => {
           matches: 0,
           wins: 0,
           losses: 0,
+          rankingAdjustmentTotal: 0,
+          rankingBonusTotal: 0,
           createdAt: new Date()
         };
         
         // Save to DynamoDB
         const playerForDB = convertToDynamoDBFormat(newPlayer);
         await playerService.createPlayer(playerForDB);
-        
-        // Update local state
-        setPlayers([...players, newPlayer]);
+
+        await loadPlayers(true);
       } else if (modalState.type === 'edit' && selectedPlayer) {
         // Update existing player
         const updatedPlayer = { 
@@ -96,13 +100,8 @@ const PlayerPage: React.FC = () => {
         // Save to DynamoDB
         const playerForDB = convertToDynamoDBFormat(updatedPlayer);
         await playerService.updatePlayer(selectedPlayer.id, playerForDB);
-        
-        // Update local state
-        setPlayers(players.map(player =>
-          player.id === selectedPlayer.id
-            ? updatedPlayer
-            : player
-        ));
+
+        await loadPlayers(true);
       }
       setModalState({ ...modalState, isOpen: false });
     } catch (error) {
@@ -119,12 +118,14 @@ const PlayerPage: React.FC = () => {
 
   // Calculate player statistics
   const getPlayerStats = (player: Player) => {
-    const winPercentage = player.matches > 0 ? (player.wins / player.matches * 100) : 0;
+    const adj = player.rankingAdjustmentTotal ?? 0;
+    const totalPts =
+      player.matches > 0 ? leaderboardCumulativePoints(player.matches, adj) : 0;
     return {
-      winPercentage: winPercentage.toFixed(1),
       matches: player.matches,
       wins: player.wins,
-      losses: player.losses
+      losses: player.losses,
+      pointDisplay: formatLeaderboardPoints(totalPts, player.matches)
     };
   };
 
@@ -214,8 +215,8 @@ const PlayerPage: React.FC = () => {
                     <span className="stat-label">Losses</span>
                   </div>
                   <div className="stat">
-                    <span className="stat-value percentage">{stats.winPercentage}%</span>
-                    <span className="stat-label">Win Rate</span>
+                    <span className="stat-value percentage">{stats.pointDisplay}</span>
+                    <span className="stat-label">Total pts</span>
                   </div>
                 </div>
 

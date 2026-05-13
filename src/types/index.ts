@@ -6,6 +6,10 @@ export interface Player {
   matches: number;
   wins: number;
   losses: number;
+  /** Cumulative net match adjustments; leaderboard total pts = 100 + this value */
+  rankingAdjustmentTotal?: number;
+  /** Net upset modifiers only (+bonus / −penalty) */
+  rankingBonusTotal?: number;
   createdAt: Date;
 }
 
@@ -24,11 +28,13 @@ export interface Match {
   createdAt: Date;
 }
 
-// Player statistics for ranking
-export interface PlayerStats {
+// Player leaderboard row (ranked cohort or provisional <3 matches)
+export interface PlayerRankingDisplay {
   player: Player;
   rank: number;
-  winPercentage: number;
+  provisional: boolean;
+  /** Shown leaderboard total pts = 100 + rankingAdjustmentTotal */
+  cumulativePoints: number;
 }
 
 // Form data types

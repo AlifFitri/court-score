@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Match, Player, CreateMatchData } from '../../types';
 import { isValidBadmintonScore } from '../../utils';
+import { previewMatchPoints } from '../../utils/ranking';
 import './MatchModal.css';
 
 // Props for the MatchModal component
@@ -9,6 +10,7 @@ interface MatchModalProps {
   type: 'create' | 'edit' | 'delete';
   match: Match | null;
   players: Player[];
+  allMatches: Match[];
   onSave: (matchData: CreateMatchData) => void;
   onClose: () => void;
 }
@@ -19,6 +21,7 @@ const MatchModal: React.FC<MatchModalProps> = ({
   type,
   match,
   players,
+  allMatches,
   onSave,
   onClose
 }) => {
@@ -52,6 +55,38 @@ const MatchModal: React.FC<MatchModalProps> = ({
       setErrors({});
     }
   }, [isOpen, type, match]);
+
+  const pointsPreview = useMemo(() => {
+    if (!isOpen || team1Players.length === 0 || team2Players.length === 0) {
+      return null;
+    }
+    return previewMatchPoints(players, allMatches, {
+      date,
+      createdAtFallback: match?.createdAt ?? new Date(),
+      team1Players,
+      team2Players,
+      team1Score,
+      team2Score,
+      excludeMatchId: type === 'edit' && match ? match.id : undefined
+    });
+  }, [
+    isOpen,
+    players,
+    allMatches,
+    date,
+    match,
+    type,
+    team1Players,
+    team2Players,
+    team1Score,
+    team2Score
+  ]);
+
+  const formatDeltaLine = (name: string, delta: number, bonusDelta: number): string => {
+    const base = `${name}: ${delta >= 0 ? '+' : ''}${delta}`;
+    if (bonusDelta === 0) return base;
+    return `${base} (upset ${bonusDelta >= 0 ? '+' : ''}${bonusDelta})`;
+  };
 
   // Format date for datetime-local input (handles timezone offset)
   const formatDateForInput = (date: Date): string => {
@@ -304,6 +339,40 @@ const MatchModal: React.FC<MatchModalProps> = ({
               <span className="error-message">{errors.scores}</span>
             )}
           </div>
+
+          {pointsPreview && !pointsPreview.incomplete && (
+            <div className="match-points-preview">
+              <h3 className="match-points-preview-title">Points (before save)</h3>
+              <p className="match-points-preview-helper">
+                From current leaderboard at this match time. Same ± change for doubles partners when they win or lose together.
+              </p>
+              <div className="match-points-team">
+                <div className="match-points-team-label">Team 1</div>
+                <ul className="match-points-list">
+                  {pointsPreview.team1Totals.map((p) => (
+                    <li key={p.playerId}>
+                      {formatDeltaLine(p.name ?? p.playerId, p.delta, p.bonusDelta)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="match-points-team">
+                <div className="match-points-team-label">Team 2</div>
+                <ul className="match-points-list">
+                  {pointsPreview.team2Totals.map((p) => (
+                    <li key={p.playerId}>
+                      {formatDeltaLine(p.name ?? p.playerId, p.delta, p.bonusDelta)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+          {pointsPreview?.incomplete && team1Players.length > 0 && team2Players.length > 0 && (
+            <p className="match-points-preview-incomplete">
+              Enter valid scores with a winner and distinct players to preview rank-based points.
+            </p>
+          )}
 
           {/* Form Actions */}
           <div className="form-actions">

@@ -1,34 +1,4 @@
-import { Player, Match, PlayerStats } from '../types';
-
-// Calculate player statistics from matches
-export const calculatePlayerStats = (players: Player[], matches: Match[]): PlayerStats[] => {
-  const playerStatsMap = new Map<string, PlayerStats>();
-  
-  // Initialize player stats
-  players.forEach(player => {
-    playerStatsMap.set(player.id, {
-      player,
-      rank: 0,
-      winPercentage: player.matches > 0 ? (player.wins / player.matches) : 0
-    });
-  });
-  
-  // Sort by win percentage (descending)
-  const sortedStats = Array.from(playerStatsMap.values()).sort((a, b) => {
-    if (a.winPercentage !== b.winPercentage) {
-      return b.winPercentage - a.winPercentage;
-    }
-    // If win percentage is the same, sort by total wins
-    return b.player.wins - a.player.wins;
-  });
-  
-  // Assign ranks
-  sortedStats.forEach((stats, index) => {
-    stats.rank = index + 1;
-  });
-  
-  return sortedStats;
-};
+import { winnerFromScores } from './ranking';
 
 // Calculate win percentage with 5 decimal places
 export const calculateWinPercentage = (wins: number, matches: number): string => {
@@ -39,10 +9,10 @@ export const calculateWinPercentage = (wins: number, matches: number): string =>
 
 // Determine match winner based on badminton rules
 export const determineMatchWinner = (team1Score: number, team2Score: number): number => {
-  // Badminton rules: best of 3 games, each game to 21 points (must win by 2, max 30)
-  // For simplicity, we'll consider the team with higher score as winner
-  // In a real implementation, we'd need to validate the score according to badminton rules
-  return team1Score > team2Score ? 1 : team1Score < team2Score ? 2 : 0;
+  const w = winnerFromScores(team1Score, team2Score);
+  if (w === 'team1') return 1;
+  if (w === 'team2') return 2;
+  return 0;
 };
 
 // Validate badminton score

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Match, Player, ModalState } from '../types';
 import { generateId, formatDate, determineMatchWinner } from '../utils';
+import { playersWithRankingFromMatches, sortMatchesDescendingForDisplay } from '../utils/ranking';
 import MatchModal from '../components/matches/MatchModal';
 import { matchService, playerService, convertToDynamoDBFormat, convertFromDynamoDBFormat } from '../services/dynamodb';
 import './MatchPage.css';
@@ -46,6 +47,21 @@ const MatchPage: React.FC = () => {
     loadData();
   }, []);
 
+  const syncPlayerAggregatesToDb = async (roster: Player[], allMatches: Match[]) => {
+    const synced = playersWithRankingFromMatches(roster, allMatches);
+    await Promise.all(
+      synced.map((p) =>
+        playerService.updatePlayer(p.id, convertToDynamoDBFormat(p))
+      )
+    );
+    setPlayers(synced);
+  };
+
+  const matchesNewestFirst = useMemo(
+    () => sortMatchesDescendingForDisplay(matches),
+    [matches]
+  );
+
   // Open create match modal
   const handleCreateMatch = () => {
     setSelectedMatch(null);
@@ -63,7 +79,9 @@ const MatchPage: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this match?')) {
       try {
         await matchService.deleteMatch(matchId);
-        setMatches(matches.filter(match => match.id !== matchId));
+        const nextMatches = matches.filter((match) => match.id !== matchId);
+        setMatches(nextMatches);
+        await syncPlayerAggregatesToDb(players, nextMatches);
       } catch (error) {
         console.error('Error deleting match:', error);
         alert('Failed to delete match. Please try again.');
@@ -93,9 +111,10 @@ const MatchPage: React.FC = () => {
         // Save to DynamoDB
         const matchForDB = convertToDynamoDBFormat(newMatch);
         await matchService.createMatch(matchForDB);
-        
-        // Update local state
-        setMatches([...matches, newMatch]);
+
+        const nextMatches = [...matches, newMatch];
+        setMatches(nextMatches);
+        await syncPlayerAggregatesToDb(players, nextMatches);
       } else if (modalState.type === 'edit' && selectedMatch) {
         // Update existing match
         const updatedMatch = {
@@ -114,13 +133,12 @@ const MatchPage: React.FC = () => {
         // Save to DynamoDB
         const matchForDB = convertToDynamoDBFormat(updatedMatch);
         await matchService.updateMatch(selectedMatch.id, matchForDB);
-        
-        // Update local state
-        setMatches(matches.map(match =>
-          match.id === selectedMatch.id
-            ? updatedMatch
-            : match
-        ));
+
+        const nextMatches = matches.map((match) =>
+          match.id === selectedMatch.id ? updatedMatch : match
+        );
+        setMatches(nextMatches);
+        await syncPlayerAggregatesToDb(players, nextMatches);
       }
       setModalState({ ...modalState, isOpen: false });
     } catch (error) {
@@ -182,7 +200,7 @@ const MatchPage: React.FC = () => {
         </div>
       ) : (
         <div className="matches-list">
-          {matches.map((match) => {
+          {matchesNewestFirst.map((match) => {
             const winnerInfo = getWinnerInfo(match);
             return (
               <div key={match.id} className="match-card">
@@ -284,6 +302,7 @@ const MatchPage: React.FC = () => {
         type={modalState.type}
         match={selectedMatch}
         players={players}
+        allMatches={matches}
         onSave={handleSaveMatch}
         onClose={handleCloseModal}
       />

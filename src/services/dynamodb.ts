@@ -64,10 +64,15 @@ export const playerService = {
 
   // Update player
   updatePlayer: async (id: string, playerData: any) => {
+    const adj =
+      typeof playerData.rankingAdjustmentTotal === 'number' ? playerData.rankingAdjustmentTotal : 0;
+    const bon =
+      typeof playerData.rankingBonusTotal === 'number' ? playerData.rankingBonusTotal : 0;
     const params = {
       TableName: PLAYERS_TABLE,
       Key: { id },
-      UpdateExpression: 'SET #name = :name, avatar = :avatar, matches = :matches, wins = :wins, losses = :losses',
+      UpdateExpression:
+        'SET #name = :name, avatar = :avatar, matches = :matches, wins = :wins, losses = :losses, rankingAdjustmentTotal = :radj, rankingBonusTotal = :rbon',
       ExpressionAttributeNames: {
         '#name': 'name'
       },
@@ -76,7 +81,9 @@ export const playerService = {
         ':avatar': playerData.avatar,
         ':matches': playerData.matches,
         ':wins': playerData.wins,
-        ':losses': playerData.losses
+        ':losses': playerData.losses,
+        ':radj': adj,
+        ':rbon': bon
       },
       ReturnValues: 'ALL_NEW'
     };
@@ -225,6 +232,9 @@ export const convertFromDynamoDBFormat = (data: any) => {
   if (converted.date) {
     converted.date = new Date(converted.date);
   }
-  
+
+  converted.rankingAdjustmentTotal = converted.rankingAdjustmentTotal ?? 0;
+  converted.rankingBonusTotal = converted.rankingBonusTotal ?? 0;
+
   return converted;
 };
