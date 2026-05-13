@@ -26,24 +26,49 @@ All other columns (name, avatar, matches, wins, losses, date, team1, team2, etc.
 
 ### Step-by-Step Setup
 
-1. **Update Environment Variables**
-   - Copy `.env` and update with your AWS credentials:
+1. **REST API (recommended for production / Netlify)**
+
+   The React app talks to DynamoDB only through a separate **AWS Lambda + HTTP API** (`backend/`). IAM credentials never ship in the browser—only a public base URL.
+
+   - Install [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html) and configure [AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) on your machine (same account that owns the tables).
+   - Ensure your DynamoDB tables exist (names default to `court-score-players` and `court-score-matches`; override when deploying).
+   - Build and deploy the API:
+
    ```bash
-   # AWS DynamoDB Configuration
-   REACT_APP_AWS_ACCESS_KEY_ID=your_actual_access_key_here
-   REACT_APP_AWS_SECRET_ACCESS_KEY=your_actual_secret_key_here
-   REACT_APP_AWS_REGION=ap-southeast-1
-   REACT_APP_DYNAMODB_PLAYERS_TABLE=court-score-players
-   REACT_APP_DYNAMODB_MATCHES_TABLE=court-score-matches
+   cd backend
+   npm install
+   npm run build
+   sam validate    # optional
+   sam build
+   sam deploy --guided
    ```
 
-2. **Create DynamoDB Tables**
+   On the last step, SAM prints **HttpApiUrl** (for example `https://abc123.execute-api.ap-southeast-1.amazonaws.com`). Set that in the app as:
+
+   ```bash
+   # .env — used at build time by Create React App
+   REACT_APP_API_URL=https://abc123.execute-api.ap-southeast-1.amazonaws.com
+   ```
+
+   In **Netlify**: add `REACT_APP_API_URL` under **Site configuration → Environment variables** (no AWS keys).
+
+2. **Local table creation helper (IAM user keys on your machine only)**
+
+   The script below needs AWS credentials in the environment—it is **not** used by the browser.
+
+   ```bash
+   export REACT_APP_AWS_ACCESS_KEY_ID=...
+   export REACT_APP_AWS_SECRET_ACCESS_KEY=...
+   export REACT_APP_AWS_REGION=ap-southeast-1
+   ```
+
+3. **Create DynamoDB Tables**
    ```bash
    # Run the table creation script
    node create-dynamodb-tables.js
    ```
 
-3. **Verify IAM Permissions**
+4. **Verify IAM Permissions**
    Ensure your AWS IAM user has these DynamoDB permissions:
    - `dynamodb:CreateTable`
    - `dynamodb:PutItem`
@@ -56,10 +81,11 @@ All other columns (name, avatar, matches, wins, losses, date, team1, team2, etc.
 ### Troubleshooting
 
 If you see errors like "Table not found" or "Access denied":
-- Verify your AWS credentials in `.env`
-- Run the table creation script again
-- Check IAM permissions in AWS Console
-- Ensure the AWS region matches your DynamoDB tables
+- For the **SPA**: ensure `REACT_APP_API_URL` matches the deployed Lambda API base URL (Netlify env or local `.env`).
+- For **table creation**: ensure AWS credentials are set in your shell (see step 2 above).
+- Run the table creation script again if tables are missing.
+- Check IAM permissions in AWS Console—Lambda’s role must allow DynamoDB CRUD on both tables; your admin user needs `CreateTable` for the helper script.
+- Ensure the AWS region matches your DynamoDB tables and the API deployment region.
 
 ## Available Scripts
 

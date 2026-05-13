@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Court Score API — HTTP API + Lambda → DynamoDB (no keys in the browser)
+
+Parameters:
+  PlayersTableName:
+    Type: String
+    Default: court-score-players
+    Description: Existing DynamoDB table name (partition key id)
+  MatchesTableName:
+    Type: String
+    Default: court-score-matches
+    Description: Existing DynamoDB table name (partition key id)
+
+Globals:
+  Function:
+    Timeout: 29
+    MemorySize: 256
+    Architectures:
+      - x86_64
+
+Resources:
+  CourtHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - content-type
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: index.handler
+      Runtime: nodejs20.x
+      Environment:
+        Variables:
+          PLAYERS_TABLE: !Ref PlayersTableName
+          MATCHES_TABLE: !Ref MatchesTableName
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${PlayersTableName}
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${MatchesTableName}
+      Events:
+        ApiProxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref CourtHttpApi
+            Path: /{proxy+}
+            Method: ANY
+
+Outputs:
+  HttpApiUrl:
+    Description: Set REACT_APP_API_URL in Netlify to this value (no trailing slash)
+    Value: !Sub https://${CourtHttpApi}.execute-api.${AWS::Region}.amazonaws.com

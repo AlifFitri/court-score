@@ -165,8 +165,8 @@ const HomePage: React.FC = () => {
         const players = await playerService.getAllPlayers();
         const matches = await matchService.getAllMatches();
 
-        const convertedPlayers = players.map(convertFromDynamoDBFormat);
-        const convertedMatches = matches.map(convertFromDynamoDBFormat);
+        const convertedPlayers = players.map((p) => convertFromDynamoDBFormat<Player>(p));
+        const convertedMatches = matches.map((m) => convertFromDynamoDBFormat<Match>(m));
 
         const rows = buildLeaderboardRows(convertedPlayers, convertedMatches);
         setPlayersRoster(convertedPlayers);

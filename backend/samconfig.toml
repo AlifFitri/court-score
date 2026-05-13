@@ -1,0 +1,26 @@
+# Deploy from this folder after: npm run build && sam build
+# Usage: sam deploy   (or sam.cmd deploy on Git Bash for Windows)
+#
+# Edit region / stack_name / parameter_overrides here so you never retype them.
+
+version = 0.1
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.deploy.parameters]
+stack_name = "court-score"
+region = "ap-southeast-5"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+disable_rollback = false
+resolve_s3 = true
+
+# Must match existing DynamoDB tables in this region (partition key: id).
+parameter_overrides = "PlayersTableName=court-score-players MatchesTableName=court-score-matches"
+
+# SAM may prompt to create/pick an S3 bucket on first deploy. After that, you can
+# pin it here so uploads go to the same place every time (uncomment and set your bucket):
+# s3_bucket = "your-artifacts-bucket-name"
+# s3_prefix = "court-score"

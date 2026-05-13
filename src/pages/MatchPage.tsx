@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Match, Player, ModalState } from '../types';
+import type { Match, Player, ModalState } from '../types';
 import { generateId, formatDate, determineMatchWinner } from '../utils';
 import { playersWithRankingFromMatches, sortMatchesDescendingForDisplay } from '../utils/ranking';
 import MatchModal from '../components/matches/MatchModal';
@@ -29,8 +29,8 @@ const MatchPage: React.FC = () => {
         ]);
         
         // Convert from DynamoDB format
-        const convertedPlayers = playersData.map(convertFromDynamoDBFormat);
-        const convertedMatches = matchesData.map(convertFromDynamoDBFormat);
+        const convertedPlayers = playersData.map((p) => convertFromDynamoDBFormat<Player>(p));
+        const convertedMatches = matchesData.map((m) => convertFromDynamoDBFormat<Match>(m));
         
         setPlayers(convertedPlayers);
         setMatches(convertedMatches);

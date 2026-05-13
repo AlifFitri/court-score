@@ -1,240 +1,101 @@
-import AWS from 'aws-sdk';
+const API_BASE = (process.env.REACT_APP_API_URL ?? '').replace(/\/$/, '');
 
-// Configure AWS SDK
-AWS.config.update({
-  accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.REACT_APP_AWS_SECRET_ACCESS_KEY,
-  region: process.env.REACT_APP_AWS_REGION || 'ap-southeast-1'
-});
+async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  if (!API_BASE) {
+    throw new Error(
+      'Missing REACT_APP_API_URL. Deploy the backend (see backend/template.yaml) and set this in .env or Netlify environment variables.'
+    );
+  }
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init?.headers as Record<string, string>)
+    }
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || res.statusText);
+  }
+  const text = await res.text();
+  if (!text) return undefined as T;
+  return JSON.parse(text) as T;
+}
 
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
-
-// Table names from environment variables
-const PLAYERS_TABLE = process.env.REACT_APP_DYNAMODB_PLAYERS_TABLE || 'court-score-players';
-const MATCHES_TABLE = process.env.REACT_APP_DYNAMODB_MATCHES_TABLE || 'court-score-matches';
-
-// Player service functions
+// Player service — calls Lambda HTTP API (credentials stay on AWS).
 export const playerService = {
-  // Get all players
-  getAllPlayers: async () => {
-    const params = {
-      TableName: PLAYERS_TABLE
-    };
+  getAllPlayers: () => apiRequest<unknown[]>('/players'),
 
-    try {
-      const result = await dynamoDB.scan(params).promise();
-      return result.Items || [];
-    } catch (error) {
-      console.error('Error fetching players:', error);
-      throw error;
-    }
-  },
+  getPlayer: (id: string) =>
+    apiRequest<Record<string, unknown> | null>(`/players/${encodeURIComponent(id)}`),
 
-  // Get player by ID
-  getPlayer: async (id: string) => {
-    const params = {
-      TableName: PLAYERS_TABLE,
-      Key: { id }
-    };
+  createPlayer: (playerData: Record<string, unknown>) =>
+    apiRequest<Record<string, unknown>>('/players', {
+      method: 'POST',
+      body: JSON.stringify(playerData)
+    }),
 
-    try {
-      const result = await dynamoDB.get(params).promise();
-      return result.Item;
-    } catch (error) {
-      console.error('Error fetching player:', error);
-      throw error;
-    }
-  },
+  updatePlayer: (id: string, playerData: Record<string, unknown>) =>
+    apiRequest<Record<string, unknown>>(`/players/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(playerData)
+    }),
 
-  // Create new player
-  createPlayer: async (playerData: any) => {
-    const params = {
-      TableName: PLAYERS_TABLE,
-      Item: playerData
-    };
-
-    try {
-      await dynamoDB.put(params).promise();
-      return playerData;
-    } catch (error) {
-      console.error('Error creating player:', error);
-      throw error;
-    }
-  },
-
-  // Update player
-  updatePlayer: async (id: string, playerData: any) => {
-    const adj =
-      typeof playerData.rankingAdjustmentTotal === 'number' ? playerData.rankingAdjustmentTotal : 0;
-    const bon =
-      typeof playerData.rankingBonusTotal === 'number' ? playerData.rankingBonusTotal : 0;
-    const params = {
-      TableName: PLAYERS_TABLE,
-      Key: { id },
-      UpdateExpression:
-        'SET #name = :name, avatar = :avatar, matches = :matches, wins = :wins, losses = :losses, rankingAdjustmentTotal = :radj, rankingBonusTotal = :rbon',
-      ExpressionAttributeNames: {
-        '#name': 'name'
-      },
-      ExpressionAttributeValues: {
-        ':name': playerData.name,
-        ':avatar': playerData.avatar,
-        ':matches': playerData.matches,
-        ':wins': playerData.wins,
-        ':losses': playerData.losses,
-        ':radj': adj,
-        ':rbon': bon
-      },
-      ReturnValues: 'ALL_NEW'
-    };
-
-    try {
-      const result = await dynamoDB.update(params).promise();
-      return result.Attributes;
-    } catch (error) {
-      console.error('Error updating player:', error);
-      throw error;
-    }
-  },
-
-  // Delete player
-  deletePlayer: async (id: string) => {
-    const params = {
-      TableName: PLAYERS_TABLE,
-      Key: { id }
-    };
-
-    try {
-      await dynamoDB.delete(params).promise();
-      return { id };
-    } catch (error) {
-      console.error('Error deleting player:', error);
-      throw error;
-    }
-  }
+  deletePlayer: (id: string) =>
+    apiRequest<{ id: string }>(`/players/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    })
 };
 
-// Match service functions
 export const matchService = {
-  // Get all matches
-  getAllMatches: async () => {
-    const params = {
-      TableName: MATCHES_TABLE
-    };
+  getAllMatches: () => apiRequest<unknown[]>('/matches'),
 
-    try {
-      const result = await dynamoDB.scan(params).promise();
-      return result.Items || [];
-    } catch (error) {
-      console.error('Error fetching matches:', error);
-      throw error;
-    }
-  },
+  getMatch: (id: string) =>
+    apiRequest<Record<string, unknown> | null>(`/matches/${encodeURIComponent(id)}`),
 
-  // Get match by ID
-  getMatch: async (id: string) => {
-    const params = {
-      TableName: MATCHES_TABLE,
-      Key: { id }
-    };
+  createMatch: (matchData: Record<string, unknown>) =>
+    apiRequest<Record<string, unknown>>('/matches', {
+      method: 'POST',
+      body: JSON.stringify(matchData)
+    }),
 
-    try {
-      const result = await dynamoDB.get(params).promise();
-      return result.Item;
-    } catch (error) {
-      console.error('Error fetching match:', error);
-      throw error;
-    }
-  },
+  updateMatch: (id: string, matchData: Record<string, unknown>) =>
+    apiRequest<Record<string, unknown>>(`/matches/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(matchData)
+    }),
 
-  // Create new match
-  createMatch: async (matchData: any) => {
-    const params = {
-      TableName: MATCHES_TABLE,
-      Item: matchData
-    };
-
-    try {
-      await dynamoDB.put(params).promise();
-      return matchData;
-    } catch (error) {
-      console.error('Error creating match:', error);
-      throw error;
-    }
-  },
-
-  // Update match
-  updateMatch: async (id: string, matchData: any) => {
-    const params = {
-      TableName: MATCHES_TABLE,
-      Key: { id },
-      UpdateExpression: 'SET #date = :date, team1 = :team1, team2 = :team2',
-      ExpressionAttributeNames: {
-        '#date': 'date'
-      },
-      ExpressionAttributeValues: {
-        ':date': matchData.date,
-        ':team1': matchData.team1,
-        ':team2': matchData.team2
-      },
-      ReturnValues: 'ALL_NEW'
-    };
-
-    try {
-      const result = await dynamoDB.update(params).promise();
-      return result.Attributes;
-    } catch (error) {
-      console.error('Error updating match:', error);
-      throw error;
-    }
-  },
-
-  // Delete match
-  deleteMatch: async (id: string) => {
-    const params = {
-      TableName: MATCHES_TABLE,
-      Key: { id }
-    };
-
-    try {
-      await dynamoDB.delete(params).promise();
-      return { id };
-    } catch (error) {
-      console.error('Error deleting match:', error);
-      throw error;
-    }
-  }
+  deleteMatch: (id: string) =>
+    apiRequest<{ id: string }>(`/matches/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    })
 };
 
-// Helper function to convert date objects for DynamoDB
-export const convertToDynamoDBFormat = (data: any) => {
-  const converted = { ...data };
-  
-  // Convert Date objects to ISO strings for DynamoDB
+export function convertToDynamoDBFormat(data: unknown): Record<string, unknown> {
+  const converted = { ...(data as Record<string, unknown>) };
+
   if (converted.createdAt instanceof Date) {
     converted.createdAt = converted.createdAt.toISOString();
   }
   if (converted.date instanceof Date) {
     converted.date = converted.date.toISOString();
   }
-  
+
   return converted;
 };
 
-// Helper function to convert from DynamoDB format
-export const convertFromDynamoDBFormat = (data: any) => {
-  const converted = { ...data };
-  
-  // Convert ISO strings back to Date objects
+export function convertFromDynamoDBFormat<T>(data: unknown): T {
+  const converted = { ...(data as Record<string, unknown>) };
+
   if (converted.createdAt) {
-    converted.createdAt = new Date(converted.createdAt);
+    converted.createdAt = new Date(converted.createdAt as string);
   }
   if (converted.date) {
-    converted.date = new Date(converted.date);
+    converted.date = new Date(converted.date as string);
   }
 
   converted.rankingAdjustmentTotal = converted.rankingAdjustmentTotal ?? 0;
   converted.rankingBonusTotal = converted.rankingBonusTotal ?? 0;
 
-  return converted;
-};
+  return converted as T;
+}

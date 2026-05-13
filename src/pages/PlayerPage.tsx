@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Player, CreatePlayerData, ModalState } from '../types';
+import type { Player, CreatePlayerData, ModalState, Match } from '../types';
 import { generateId } from '../utils';
 import { playersWithRankingFromMatches, leaderboardCumulativePoints, formatLeaderboardPoints } from '../utils/ranking';
 import PlayerModal from '../components/players/PlayerModal';
@@ -24,8 +24,8 @@ const PlayerPage: React.FC = () => {
         playerService.getAllPlayers(),
         matchService.getAllMatches()
       ]);
-      const convertedPlayers = playersData.map(convertFromDynamoDBFormat);
-      const convertedMatches = matchesData.map(convertFromDynamoDBFormat);
+      const convertedPlayers = playersData.map((p) => convertFromDynamoDBFormat<Player>(p));
+      const convertedMatches = matchesData.map((m) => convertFromDynamoDBFormat<Match>(m));
       setPlayers(playersWithRankingFromMatches(convertedPlayers, convertedMatches));
     } catch (error) {
       console.error('Error loading players:', error);
